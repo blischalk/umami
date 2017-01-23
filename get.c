@@ -2,7 +2,7 @@
  * https://dev.twitter.com/rest/reference/get/statuses/user_timeline
  * http://pixelrobotics.com/2013/01/consuming-the-twitter-public-stream-with-libcurl/
  * https://curl.haxx.se/libcurl/c/getinmemory.html
- *
+ * http://stackoverflow.com/questions/21023605/initialize-array-of-strings
  * Compile with:
  *
  * gcc -o get get.c -loauth -lcurl
@@ -13,6 +13,8 @@
 #include <unistd.h>
 #include <oauth.h>
 #include <curl/curl.h>
+
+char **TWEETS;
 
 struct MemoryStruct {
   char *memory;
@@ -39,8 +41,22 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
   return realsize;
 }
 
+void InitializeTweets(void)
+{
+  // allocate space for 10 pointers to tweets(strings)
+  TWEETS = (char**)malloc(10*sizeof(char*));
+  int i = 0;
+  //allocate space for each tweet(string)
+  // here allocate 141 bytes
+  for(i = 0; i < 10; i++){
+    printf("Initializing 141 bytes for tweet: %d\n", i);
+    TWEETS[i] = (char*)malloc(141*sizeof(char));
+  }
+}
+
 int main(int argc, const char *argv[])
 {
+    InitializeTweets();
 
     const char *ckey = getenv("CKEY");
     const char *csecret = getenv("CSECRET");
