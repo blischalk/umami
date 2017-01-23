@@ -41,20 +41,6 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 
 int main(int argc, const char *argv[])
 {
-    FILE *out;
-    if(argc == 2)
-    {
-        out = fopen(argv[1], "w");
-    }
-    else if(argc == 1)
-    {
-        out = stdout;
-    }
-    else
-    {
-        printf("usage: %s [outfile]\n", argv[0]);
-        return 1;
-    }
 
     const char *ckey = getenv("CKEY");
     const char *csecret = getenv("CSECRET");
@@ -113,7 +99,6 @@ int main(int argc, const char *argv[])
     curl_easy_cleanup(curl);
     free(chunk.memory);
     curl_global_cleanup();
-    fclose(out);
 
     return 0;
 }
