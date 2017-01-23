@@ -12,6 +12,7 @@
  *    (/) Hit Twitter API
  *    (/) Store CURL results in memory
  *    (/) Use environment variables for credentials
+ *    (/) Copy tweets into an array in memory
  *    (*) Save Base64 endoced bodies only into memory
  * (*) Base64 decode tweet
  * (*) Decode tweet... Choose cipher
@@ -34,6 +35,8 @@
 #include <curl/curl.h>
 
 char **TWEETS;
+
+void PopulateTweets(char *, int);
 
 struct MemoryStruct {
   char *memory;
@@ -63,13 +66,14 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 void InitializeTweets(void)
 {
   // allocate space for 10 pointers to tweets(strings)
-  TWEETS = (char**)malloc(10*sizeof(char*));
+  TWEETS = (char**)malloc(11*sizeof(char*));
   int i = 0;
   //allocate space for each tweet(string)
   // here allocate 141 bytes
-  for(i = 0; i < 10; i++){
+  for(i = 0; i < 11; i++){
     printf("Initializing 141 bytes for tweet: %d\n", i);
     TWEETS[i] = (char*)malloc(141*sizeof(char));
+    memset(TWEETS[i], 0, sizeof(TWEETS[i]));
   }
 }
 
@@ -128,12 +132,49 @@ int main(int argc, const char *argv[])
        * Do something nice with it!
        */
 
-      printf("%lu bytes retrieved\n", (long)chunk.size);
+      //printf("%lu bytes retrieved\n", (long)chunk.size);
+      PopulateTweets(chunk.memory,0);
     }
+
+    printf("The third tweet is: \n");
+    printf("%s\n", TWEETS[2]);
 
     curl_easy_cleanup(curl);
     free(chunk.memory);
     curl_global_cleanup();
 
     return 0;
+}
+
+void PopulateTweets(char *tweet_data, int tweets_index)
+{
+    // Look for a tweet body
+    // this is fragile and we are lucky that the body of a tweet
+    // happens to follow this pattern uniquely
+    char *tweet_pt = strstr(tweet_data, ",\"text\":");
+
+    // If a tweet body found
+    if (tweet_pt != NULL)
+    {
+        // Move pointer forward to beginning of tweet body text
+        tweet_pt = tweet_pt+9;
+
+        // Locate the end of the tweet body
+        char *tweet_end = strstr(tweet_pt, "\"");
+
+        int char_index = 0;
+
+        // Copy each character of the tweet into
+        // Tweets
+        //printf("Tweets index: %d\n", tweets_index);
+        while(tweet_pt != tweet_end)
+        {
+            //printf("%c", *tweet_pt);
+            TWEETS[tweets_index][char_index] = *tweet_pt;
+            tweet_pt = tweet_pt+1;
+            char_index++;
+        }
+        //printf("\n");
+        PopulateTweets(tweet_end, (tweets_index+1));
+    }
 }
