@@ -1,7 +1,4 @@
-#include <openssl/conf.h>
-#include <openssl/evp.h>
-#include <openssl/err.h>
-#include <string.h>
+#include "aesencrypt.h"
 
 static void handleErrors(void)
 {

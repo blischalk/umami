@@ -1,3 +1,6 @@
+#ifndef AESDECRYPT_H
+#define AESDECRYPT_H
+
 #include <openssl/conf.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
@@ -5,3 +8,5 @@
 
 int decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
   unsigned char *iv, unsigned char *plaintext);
+
+#endif /* AESDECRYPT_H */

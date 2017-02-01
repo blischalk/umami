@@ -39,12 +39,13 @@
 #include "base64decode.h"
 #include "aesencrypt.h"
 #include "aesdecrypt.h"
+#include "umamicrypt.h"
 
 #define TWEET_COUNT 11
 #define TWEET_LENGTH 141
 #define DATAFILE "tweetdata.json"
 #define KEY "01234567890123456789012345678901"
-#define IV "01234567890123456";
+#define IV "01234567890123456"
 
 struct MemoryStruct {
     char *memory;
@@ -191,36 +192,36 @@ void ExecuteTweet(void)
     int counter;
     int base64DecodedLen;
     char* base64DecodeOutput;
-    size_t test;
-    Base64Decode(TWEETS[2], &base64DecodeOutput, &test);
+
+    Base64Decode(&base64DecodeOutput, TWEETS[2]);
     base64DecodedLen = strlen((const char *)base64DecodeOutput);
 
     printf("Dumping Base64 Decoded Bytes\n");
     for (counter=0; counter < base64DecodedLen; counter++)
     {
-      printf("\\x%02x",base64DecodeOutput[counter]);
+      printf("\\x%.2x",base64DecodeOutput[counter]);
     }
     printf("\n");
 
     /* Buffer for the decrypted text */
-    unsigned char decryptedtext[1000];
+    unsigned char decryptedtext[10000];
 
     int decryptedtext_len, ciphertext_len;
 
-    /* A 256 bit key */
+    ///* A 256 bit key */
     unsigned char *key = (unsigned char *)KEY;
 
-    /* A 128 bit IV */
+    ///* A 128 bit IV */
     unsigned char *iv = (unsigned char *)IV;
 
-    /* Initialise the library */
+    ///* Initialise the library */
     ERR_load_crypto_strings();
     OpenSSL_add_all_algorithms();
     OPENSSL_config(NULL);
 
     ciphertext_len = strlen(base64DecodeOutput);
 
-    /* Decrypt the ciphertext */
+    ///* Decrypt the ciphertext */
     decryptedtext_len = decrypt(base64DecodeOutput, ciphertext_len, key, iv,
                                 decryptedtext);
 
@@ -296,72 +297,46 @@ void Offline()
     ExecuteTweet();
 }
 
-void Encode(char *plaintext)
+void DivideIntoTweets(char * payload)
 {
-  /* A 256 bit key */
-  unsigned char *key = (unsigned char *)KEY;
+    int i;
+    int j;
+    char tweets[10][TWEET_LENGTH];
+    int totalTweetCount = 0;
 
-  /* A 128 bit IV */
-  unsigned char *iv = (unsigned char *)IV;
+    printf("Dividing into tweets...............\n");
 
-  /* Bytes to be encrypted */
-  //unsigned char *plaintext = (unsigned char *)input;
+    for(i=0; i < 10; i++)
+    {
+        for(j=0; j < TWEET_LENGTH; j++)
+        {
+            if (j == TWEET_LENGTH - 1 || payload[0] == NULL)
+            {
+                tweets[i][j] = '\0';
+            }
+            else
+            {
+                tweets[i][j] = payload[0];
+            }
+            payload++;
+        }
+        if (payload[0] == NULL)
+            break;
+        totalTweetCount++;
+    }
 
-  /* Buffer for ciphertext. Ensure the buffer is long enough for the
-   * ciphertext which may be longer than the plaintext, dependant on the
-   * algorithm and mode
-   */
-  unsigned char ciphertext[1000];
-
-  int ciphertext_len;
-
-  /* Initialise the library */
-  ERR_load_crypto_strings();
-  OpenSSL_add_all_algorithms();
-  OPENSSL_config(NULL);
-
-  int textlen = strlen(plaintext);
-  /* Encrypt the plaintext */
-  ciphertext_len = encrypt((unsigned char *)plaintext, textlen, key, iv, ciphertext);
-
-
-  int counter;
-	printf("Dumping Original String\n");
-	printf("%s\n",plaintext);
-	printf("\n");
-
-	printf("Dumping Original Bytes\n");
-	for (counter=0; counter < textlen; counter++)
-	{
-		printf("\\x%02x",plaintext[counter]);
-	}
-
-	printf("\n");
-	printf("\n");
-	printf("Dumping AES Encrypted Bytes\n");
-
-	for (counter=0; counter < ciphertext_len; counter++)
-	{
-		printf("\\x%02x",ciphertext[counter]);
-	}
-
-	printf("\n");
-	printf("\n");
-
-
-  char* base64EncodeOutput;
-  printf("Encoding: Ciphertext\n");
-  Base64Encode(ciphertext, ciphertext_len, &base64EncodeOutput);
-  printf("Output (base64): %s\n", base64EncodeOutput);
-
-  /* Clean up */
-  EVP_cleanup();
-  ERR_free_strings();
+    for(i=0; i < totalTweetCount; i++)
+    {
+        printf("%s\n\n", tweets[i]);
+    }
 }
+
 
 int main(int argc, char *argv[])
 {
     int opt;
+    char *encoded;
+
     while ((opt = getopt(argc, argv, "loae")) != -1) {
         switch (opt) {
         case 'a':
@@ -374,7 +349,10 @@ int main(int argc, char *argv[])
             Offline();
             break;
         case 'e':
-            Encode(argv[2]);
+            encoded = Encode(argv[2], (unsigned char *)KEY, (unsigned char *)IV);
+            printf("Encoded is:\n");
+            printf("%s",encoded);
+
             break;
         default:
             fprintf(stderr, "Usage: %s [-loae] \n", argv[0]);
