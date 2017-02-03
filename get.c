@@ -297,38 +297,32 @@ void Offline()
     ExecuteTweet();
 }
 
-void DivideIntoTweets(char * payload)
+void DivideIntoTweets(char * payload, int length)
 {
-    int i;
-    int j;
-    char tweets[10][TWEET_LENGTH];
-    int totalTweetCount = 0;
+
+    int i = 0, j = 0, k = 0, max_tweets = 10;
+    char tweets[max_tweets][TWEET_LENGTH];
+
+    if (length / TWEET_LENGTH > max_tweets)
+        return;
 
     printf("Dividing into tweets...............\n");
 
-    for(i=0; i < 10; i++)
+    for(i=0; i < length; i++)
     {
-        for(j=0; j < TWEET_LENGTH; j++)
+        if (i != 0 && (i % TWEET_LENGTH) == 0 )
         {
-            if (j == TWEET_LENGTH - 1 || payload[0] == NULL)
-            {
-                tweets[i][j] = '\0';
-            }
-            else
-            {
-                tweets[i][j] = payload[0];
-            }
-            payload++;
+            tweets[j][k] = '\00';
+            j++;
+            k = 0;
+            printf("\n");
         }
-        if (payload[0] == NULL)
-            break;
-        totalTweetCount++;
-    }
 
-    for(i=0; i < totalTweetCount; i++)
-    {
-        printf("%s\n\n", tweets[i]);
+        tweets[j][k] = payload[i];
+        printf("%c", payload[i]);
+        k++;
     }
+    printf("\n");
 }
 
 
@@ -351,9 +345,7 @@ int main(int argc, char *argv[])
             break;
         case 'e':
             length = Encode(&encoded, argv[2], (unsigned char *)KEY, (unsigned char *)IV);
-            printf("Length is %d\n", length);
-            printf("Encoded is:\n");
-            printf("%s\n", encoded);
+            DivideIntoTweets(encoded, length);
 
             break;
         default:

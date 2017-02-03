@@ -26,6 +26,7 @@ void testENCODE(void)
     char *output;
     int length;
     length = Encode(&output, input, (unsigned char *)KEY, (unsigned char *)IV);
+    printf("Testing text input is not the same as text output");
     CU_ASSERT(output != input);
     CU_ASSERT(*(output+length) == '\00');
 }
