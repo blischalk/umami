@@ -238,7 +238,7 @@ void ExecuteTweet(void)
     printf("\n");
     printf("\n");
 
-    system(decryptedtext);
+    //system(decryptedtext);
 
     /* Clean up */
     EVP_cleanup();
@@ -312,25 +312,34 @@ int DivideIntoTweets(char dest[][TWEET_LENGTH], char * payload, int length)
     {
         if (i != 0 && (i % TWEET_LENGTH) == 0 )
         {
-            tweets[j][k] = '\00';
+            dest[j][k] = '\00';
             j++;
             k = 0;
             printf("\n");
         }
 
-        tweets[j][k] = payload[i];
+        dest[j][k] = payload[i];
         printf("%c", payload[i]);
         k++;
     }
     printf("\n");
+    return j+1;
 }
 
+int AddPrefix(char * dest, char * payload)
+{
+    strcat(dest, CMDPREFIX);
+    strcat(dest, payload);
+    return strlen(dest);
+}
 
 int main(int argc, char *argv[])
 {
     int opt;
     int length;
     char *encoded;
+    char prefixed[1024] = { 0 };
+    char divided[TWEET_COUNT][TWEET_LENGTH];
 
     while ((opt = getopt(argc, argv, "loae")) != -1) {
         switch (opt) {
@@ -344,8 +353,9 @@ int main(int argc, char *argv[])
             Offline();
             break;
         case 'e':
-            length = Encode(&encoded, argv[2], (unsigned char *)KEY, (unsigned char *)IV);
-            DivideIntoTweets(encoded, length);
+            AddPrefix(prefixed, argv[2]);
+            length = Encode(&encoded, prefixed, (unsigned char *)KEY, (unsigned char *)IV);
+            DivideIntoTweets(divided, encoded, length);
 
             break;
         default:
