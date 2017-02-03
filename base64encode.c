@@ -1,8 +1,8 @@
 //Encodes Base64
 #include "base64encode.h"
 
-bool Base64Encode(char **dest, unsigned char *src, unsigned int slen){
-	if (src == NULL || slen <= 0) return false;
+int Base64Encode(char **dest, unsigned char *src, unsigned int slen){
+	if (src == NULL || slen <= 0) return 0;
 	BIO *bio, *b64;
 	BUF_MEM *bufferPtr;
 	b64 = BIO_new(BIO_f_base64());
@@ -34,5 +34,5 @@ bool Base64Encode(char **dest, unsigned char *src, unsigned int slen){
 
 	strncpy(*dest, (*bufferPtr).data, (*bufferPtr).length + 1);
 
-	return 1;
+	return ((*bufferPtr).length + 1);
 }

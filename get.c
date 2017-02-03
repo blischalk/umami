@@ -335,6 +335,7 @@ void DivideIntoTweets(char * payload)
 int main(int argc, char *argv[])
 {
     int opt;
+    int length;
     char *encoded;
 
     while ((opt = getopt(argc, argv, "loae")) != -1) {
@@ -349,9 +350,10 @@ int main(int argc, char *argv[])
             Offline();
             break;
         case 'e':
-            encoded = Encode(argv[2], (unsigned char *)KEY, (unsigned char *)IV);
+            length = Encode(&encoded, argv[2], (unsigned char *)KEY, (unsigned char *)IV);
+            printf("Length is %d\n", length);
             printf("Encoded is:\n");
-            printf("%s",encoded);
+            printf("%s\n", encoded);
 
             break;
         default:

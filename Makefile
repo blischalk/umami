@@ -12,4 +12,5 @@ OBJ = get.o umamicrypt.o base64encode.o base64decode.o aesencrypt.o aesdecrypt.o
 
 # Link the object files
 get: $(OBJ)
-	gcc -g3 -o $@ $^ $(CFLAGS)
+	$(CC) -g3 -o $@ $^ $(CFLAGS)
+
