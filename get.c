@@ -46,6 +46,7 @@
 #define DATAFILE "tweetdata.json"
 #define KEY "01234567890123456789012345678901"
 #define IV "01234567890123456"
+#define CMDPREFIX "SC|"
 
 struct MemoryStruct {
     char *memory;
@@ -297,13 +298,12 @@ void Offline()
     ExecuteTweet();
 }
 
-void DivideIntoTweets(char * payload, int length)
+int DivideIntoTweets(char dest[][TWEET_LENGTH], char * payload, int length)
 {
 
-    int i = 0, j = 0, k = 0, max_tweets = 10;
-    char tweets[max_tweets][TWEET_LENGTH];
+    int i = 0, j = 0, k = 0;
 
-    if (length / TWEET_LENGTH > max_tweets)
+    if (length / TWEET_LENGTH > TWEET_COUNT)
         return;
 
     printf("Dividing into tweets...............\n");
