@@ -21,7 +21,7 @@ int Encode(char **dest, char *plaintext, unsigned char *key, unsigned char *iv)
   int textlen = strlen(plaintext);
   /* Encrypt the plaintext */
   ciphertext_len = encrypt((unsigned char *)plaintext, textlen, key, iv, ciphertext);
-  printf("Ciphertext length is: %d", ciphertext_len);
+  printf("Ciphertext length is: %d\n", ciphertext_len);
 
 
   int counter;
@@ -52,7 +52,7 @@ int Encode(char **dest, char *plaintext, unsigned char *key, unsigned char *iv)
   int length;
   printf("Encoding: Ciphertext\n");
   length = Base64Encode(dest, ciphertext, ciphertext_len);
-  printf("%s", *dest);
+  printf("%s\n", *dest);
   printf("\n");
 
   /* Clean up */

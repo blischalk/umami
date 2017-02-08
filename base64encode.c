@@ -29,10 +29,11 @@ int Base64Encode(char **dest, unsigned char *src, unsigned int slen){
 	if (bio) BIO_free_all(bio);
 
 	*dest = (char *)malloc((*bufferPtr).length + 1);
+  memset(*dest, 0,(*bufferPtr).length + 1);
 
 	if (*dest == NULL) return 0;
 
-	strncpy(*dest, (*bufferPtr).data, (*bufferPtr).length + 1);
+	strncpy(*dest, (*bufferPtr).data, (*bufferPtr).length);
 
 	return ((*bufferPtr).length + 1);
 }

@@ -1,4 +1,5 @@
 get
 *.json
+*.json.bkup
 *.o
 TAGS
