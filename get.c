@@ -28,6 +28,8 @@
  * (/) Execute reassembled command using system
  *
  * @TODO:
+ * (*) Setup test account to try with
+ * (*) Auto tweet to account divided messages
  * (*) Additional prefix pivot for system commands vs shellcode
  * (*) Add code path to ast as function pointer and execute
  * (*) Schedule on a cadence
